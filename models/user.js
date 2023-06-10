@@ -8,9 +8,9 @@ const User = sequelize.define("user", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  admin: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+  role: { type: DataTypes.STRING, allowNull: false, defaultValue: false },
 });
 
-
-
 exports.User = User;
+
+exports.UserClientFields = ["name", "email", "password", "role"];
