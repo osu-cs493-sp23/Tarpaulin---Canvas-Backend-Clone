@@ -1,0 +1,16 @@
+[
+  {
+    "subject": "cloud app development",
+    "number": "CS493",
+    "title": "testTitle",
+    "term": "Spring",
+    "instructorID": 690
+  },
+  {
+    "subject": "TestSub",
+    "number": "CS4930",
+    "title": "testTitle1",
+    "term": "Fall",
+    "instructorID": 520
+  }
+]
