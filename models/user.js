@@ -8,8 +8,12 @@ const User = sequelize.define("user", {
   password: {
     type: DataTypes.STRING,
     allowNull: false,
+    set(value) {
+      this.setDataValue("password", bcrpyt.hashSync(value, 8));
+    },
   },
   role: { type: DataTypes.STRING, allowNull: false, defaultValue: false },
+  admin: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false }
 });
 
 User.hasMany(Submission, { foreignKey: { allowNull: false } });
@@ -27,7 +31,8 @@ const createNewUser = async function createNewUser(
   name,
   email,
   password,
-  role
+  role,
+  admin
 ) {
   try {
     // Check if the email already exists
@@ -37,19 +42,45 @@ const createNewUser = async function createNewUser(
         error: "Email address already exists.",
       };
     }
-    // Create a new user
-    // const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
     const newUser = await User.create({
       name,
       email,
       password,
       role,
+      admin
     });
     return newUser;
   } catch (error) {
+    console.error("Error creating a new user:", error);
     return {
       error: "Failed to create a new user.",
     };
   }
 };
 exports.createNewUser = createNewUser;
+
+const getUserById = async function getUserById(id, includePassword) {
+  try {
+    const user = await User.findByPk(id, {
+      attributes: includePassword ? {} : { exclude: ["password"] },
+    });
+    if (user) {
+      return user;
+    }
+  } catch (error) {
+    return {
+      error: `User with id ${id} does not exist`,
+    };
+  }
+};
+exports.getUserById = getUserById;
+
+const validateUser = async function validateUser(id, email, password) {
+  const user = await getUserById(id, true, true);
+  return (
+    user &&
+    email === user.email &&
+    (await bcrpyt.compare(password, user.password))
+  );
+};
+exports.validateUser = validateUser;
