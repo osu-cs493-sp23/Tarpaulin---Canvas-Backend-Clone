@@ -4,7 +4,7 @@ const { createNewUser } = require("../models/user");
 
 const router = Router();
 
-router.get("/test", (req, res, next) => {
+router.get("/abcd", (req, res, next) => {
   return res.status(200).send({ test: "test succesful, user" });
 });
 
