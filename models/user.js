@@ -22,3 +22,34 @@ exports.User = User;
  * on users.
  */
 exports.UserClientFields = ["name", "email", "password", "role"];
+
+const createNewUser = async function createNewUser(
+  name,
+  email,
+  password,
+  role
+) {
+  try {
+    // Check if the email already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return {
+        error: "Email address already exists.",
+      };
+    }
+    // Create a new user
+    // const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+    const newUser = await User.create({
+      name,
+      email,
+      password,
+      role,
+    });
+    return newUser;
+  } catch (error) {
+    return {
+      error: "Failed to create a new user.",
+    };
+  }
+};
+exports.createNewUser = createNewUser;
