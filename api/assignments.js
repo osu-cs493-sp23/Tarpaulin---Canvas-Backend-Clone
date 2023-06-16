@@ -3,8 +3,30 @@ const { ValidationError } = require("sequelize");
 const { Assignment, AssignmentClientFields } = require("../models/assignment");
 const { Course, CourseClientFields } = require("../models/course");
 const { requireAuthentication } = require("../lib/auth");
+const multer = require("multer");
+const crypto = require("node:crypto");
+const { Submission } = require("../models/submission");
 
 const router = Router();
+
+const imageTypes = {
+  pdf: "pdf",
+};
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: `${__dirname}/uploads`,
+    filename: (req, file, callback) => {
+      const filename = crypto.pseudoRandomBytes(16).toString("hex");
+      console.log(file);
+      const extension = imageTypes[file.mimetype];
+      callback(null, `${filename}.${extension}`);
+    },
+  }),
+  fileFilter: (req, file, callback) => {
+    callback(null, !!imageTypes[file.mimetype]);
+  },
+});
 
 // POST Assignments
 
@@ -94,5 +116,29 @@ router.delete("/:id", requireAuthentication, async (req, res, next) => {
     });
   }
 });
+
+router.post(
+  "/:id/submissions",
+  upload.single("pdf"),
+  async function (req, res, next) {
+    console.log("  -- req.file:", req.file);
+    console.log("  -- req.body:", req.body);
+    if (req.file && req.body && req.body.userId) {
+      // const pdf = {
+      //   assignmentId: req.params.id,
+      //   studentId: req.body,
+      //   timestamp: req.file.filename,
+      //   path: req.file.path,
+      //   userId: req.body.userId,
+      // };
+      //  const inserted = Submission.create(pdf);
+      res.status(200).send();
+    } else {
+      res.status(400).send({
+        err: "Invalid file",
+      });
+    }
+  }
+);
 
 module.exports = router;

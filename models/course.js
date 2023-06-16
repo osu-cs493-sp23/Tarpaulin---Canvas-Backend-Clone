@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../lib/sequelize");
 const { Assignment } = require("./assignment");
+const { User } = require("./user");
 
 
 const Course = sequelize.define("course", {
@@ -16,6 +17,9 @@ const Course = sequelize.define("course", {
  */
 Course.hasMany(Assignment, { foreignKey: { allowNull: false } });
 Assignment.belongsTo(Course);
+
+Course.belongsToMany(User, { as: "Students", through: "CourseStudents" });
+User.belongsToMany(Course, { as: "Students", through: "CourseStudents" });
 
 exports.Course = Course;
 

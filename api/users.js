@@ -78,7 +78,7 @@ router.post("/login", async function (req, res, next) {
  * Route to Get a user.
  */
 router.get("/:id", requireAuthentication, async function (req, res, next) {
-  const admin = await req.admin;
+  const admin = req.admin;
   if (req.user == req.params.id || admin) {
     try {
       const id = req.params.id;

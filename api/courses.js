@@ -3,6 +3,7 @@ const { ValidationError } = require("sequelize");
 const { Course, CourseClientFields } = require("../models/course");
 const { User } = require("../models/user");
 const { requireAuthentication } = require("../lib/auth");
+const { Assignment } = require("../models/assignment");
 const router = Router();
 
 router.get("/test", (req, res, next) => {
@@ -55,7 +56,7 @@ router.get("/", async (req, res, next) => {
 
 //POST A COURSE
 router.post("/", requireAuthentication, async (req, res, next) => {
-  const admin = await req.admin;
+  const admin = req.admin;
   if (admin) {
     try {
       const { subject, number, title, term, instructorID } = req.body;
@@ -126,7 +127,7 @@ router.patch("/:id", requireAuthentication, async (req, res, next) => {
 
 // Only Authenticated user with admin can delete.
 router.delete("/:id", async (req, res, next) => {
-  const admin = await req.admin;
+  const admin = req.admin;
   if (admin) {
     const courseId = req.params.id;
     const result = await Course.destroy({ where: { id: courseId } });
@@ -140,8 +141,79 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
+// Fetch a list of students enrolled in the course
+
 router.get("/:id/students", async (req, res, next) => {
   const courseId = req.params.id;
+  const course = await Course.findByPk(courseId);
+  const students = await course.getStudents({
+    attributes: ["name", "email", "password", "role"],
+  });
+  console.log(students);
+  return res.status(200).send(students);
+  // const studentsRes = User.findAll();
+});
+
+//adding students to courses;
+
+router.post("/:id/students", requireAuthentication, async (req, res, next) => {
+  const courseId = req.params.id;
+  const admin = await req.admin;
+  if (admin) {
+    try {
+      if (req.body.add) {
+        students = req.body.add;
+        const course = await Course.findByPk(courseId);
+        const studentsToAdd = await User.findAll({
+          where: {
+            id: students,
+          },
+        });
+        await course.addStudents(studentsToAdd);
+        return res.sendStatus(200);
+      }
+      if (req.body.remove) {
+        students = req.body.remove;
+        const course = await Course.findByPk(courseId);
+        const studentsToAdd = await User.findAll({
+          where: {
+            id: students,
+          },
+        });
+        await course.removeStudents(studentsToAdd);
+        return res.sendStatus(200);
+      }
+    } catch (e) {
+      next(e);
+    }
+  } else {
+  }
+});
+
+//csv
+
+router.get("/:id/roster", async (req, res, next) => {
+  const courseId = req.params.id;
+  const course = await Course.findByPk(courseId);
+  const students = await course.getStudents({
+    attributes: ["name", "email", "password", "role"],
+  });
+
+  const csv = JSONToCSV(students, {
+    fields: ["name", "email", "password", "role"],
+  });
+
+  return res.attachment("studentsRoster.csv").send(csv);
+});
+
+//get assignments for a course
+
+router.get("/:id/assignments", async (req, res, next) => {
+  const courseId = parseInt(req.params.id);
+  const assignments = await Assignment.findAll({
+    where: { courseId: courseId },
+  });
+  return res.status(200).send(assignments);
 });
 
 module.exports = router;
