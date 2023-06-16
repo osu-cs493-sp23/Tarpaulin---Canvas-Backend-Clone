@@ -5,6 +5,8 @@ const { User } = require("../models/user");
 const { requireAuthentication } = require("../lib/auth");
 const { Assignment } = require("../models/assignment");
 const router = Router();
+const { Parser } = require("json2csv");
+const fs = require("fs");
 
 router.get("/test", (req, res, next) => {
   res.status(200).send({ test: "test succesful, courses" });
@@ -143,15 +145,31 @@ router.delete("/:id", async (req, res, next) => {
 
 // Fetch a list of students enrolled in the course
 
-router.get("/:id/students", async (req, res, next) => {
-  const courseId = req.params.id;
-  const course = await Course.findByPk(courseId);
-  const students = await course.getStudents({
-    attributes: ["name", "email", "password", "role"],
+router.get("/:id/students", requireAuthentication, async (req, res, next) => {
+  const userId = req.user;
+  const admin = req.admin;
+  const isInstructor = await User.findOne({
+    where: { id: userId, role: "instructor" },
   });
-  console.log(students);
-  return res.status(200).send(students);
-  // const studentsRes = User.findAll();
+
+  if (isInstructor || admin) {
+    try {
+      const courseId = req.params.id;
+      const course = await Course.findByPk(courseId);
+      const students = await course.getStudents({
+        attributes: ["name", "email", "password", "role"],
+      });
+      console.log(students);
+      return res.status(200).send(students);
+      // const studentsRes = User.findAll();
+    } catch (e) {
+      next(e);
+    }
+  } else {
+    res.status(403).send({
+      err: "Unauthorized to access the specified resource",
+    });
+  }
 });
 
 //adding students to courses;
@@ -193,17 +211,43 @@ router.post("/:id/students", requireAuthentication, async (req, res, next) => {
 //csv
 
 router.get("/:id/roster", async (req, res, next) => {
-  const courseId = req.params.id;
-  const course = await Course.findByPk(courseId);
-  const students = await course.getStudents({
-    attributes: ["name", "email", "password", "role"],
+  const userId = req.user;
+  const admin = req.admin;
+  const isInstructor = await User.findOne({
+    where: { id: userId, role: "instructor" },
   });
 
-  const csv = JSONToCSV(students, {
-    fields: ["name", "email", "password", "role"],
-  });
+  if (isInstructor || admin) {
+    try {
+      const courseId = req.params.id;
+      const course = await Course.findByPk(courseId);
+      const students = await course.getStudents({
+        attributes: ["name", "email", "password", "role"],
+      });
 
-  return res.attachment("studentsRoster.csv").send(csv);
+      const fields = ["name", "email", "password", "role"];
+      const json2csvParser = new Parser({ fields });
+      const csv = json2csvParser.parse(students);
+
+      const filePath = `${__dirname}/studentsRoster.csv`;
+      fs.writeFileSync(filePath, csv);
+
+      res.download(filePath, "studentsRoster.csv", (err) => {
+        if (err) {
+          console.error("Error downloading CSV:", err);
+          res.status(500).send("Error downloading CSV");
+        }
+
+        fs.unlinkSync(filePath); // Remove the file after download
+      });
+    } catch (e) {
+      next(e);
+    }
+  } else {
+    res.status(403).send({
+      err: "Unauthorized to access the specified resource",
+    });
+  }
 });
 
 //get assignments for a course
