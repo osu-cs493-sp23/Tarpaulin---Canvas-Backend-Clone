@@ -1,6 +1,8 @@
 const { Router } = require("express");
 const { ValidationError } = require("sequelize");
 const { Course, CourseClientFields } = require("../models/course");
+const { User } = require("../models/user"); 
+const { requireAuthentication } = require("../lib/auth");
 const router = Router();
 
 router.get("/test", (req, res, next) => {
@@ -52,41 +54,79 @@ router.get("/", async (req, res, next) => {
 });
 
 //POST A COURSE
-
-router.post("/", async (req, res, next) => {
-  const course = await Course.create(req.body);
-  res.status(201).send({ id: course.id });
+router.post("/", requireAuthentication ,async (req, res, next) => {
+  const admin = await req.admin;
+    if (admin) {
+      try {
+        const { subject, number, title, term, instructorID } = req.body;
+          if (!subject || !number || !title || !term || !instructorID) {
+          return res.status(400).send({ error: "Missing required fields" });
+      }
+        const course = await Course.create(req.body);
+        res.status(201).send({ id: course.id });
+      }
+      catch (e) {
+        next(e);
+      }
+    } else {
+      res.status(403).send({
+        error: "Unauthorized to create a course.",
+      });
+    }
 });
 
 //GET A SPECIFIC COURSE
-
 router.get("/:id", async (req, res, next) => {
   const courseId = req.params.id;
   const course = await Course.findByPk(courseId);
   if (course) {
     res.status(200).send(course);
   } else {
-    next();
+    return res.status(404).send({
+      error: "Requested resource does not exist.",
+    });
   }
 });
 
 //PATCH A SPECIFIC COURSE
-
-router.patch("/:id", async (req, res, next) => {
-  const courseId = req.params.id;
-  const result = await Course.update(req.body, {
-    where: { id: courseId },
-    fields: CourseClientFields,
-  });
-
-  if (result[0] > 0) {
-    res.status(204).send();
+router.patch("/:id",requireAuthentication, async (req, res, next) => {
+  const instructorID = req.body.instructorID;
+  const admin = await req.admin;
+  console.log(admin);
+  if (req.user == instructorID || admin){
+    try {
+      const user = await User.findOne({
+        where: { id: instructorID, role: "instructor" },
+      });
+      if (!user) {
+        return res.status(404).send({ error: "Instructor not found" });
+      }
+      const courseId = req.params.id;
+      const result = await Course.update(req.body, {
+          where: { id: courseId , instructorID: instructorID},
+          fields: CourseClientFields,
+      });
+      if (result[0] > 0) {
+        res.status(200).send({
+          message: "Updated the course."
+        });
+      }
+      else{
+        return res.status(404).send({
+          error: "Invalid Instructor.",
+        });
+      }
+    } catch (e) {
+      next(e);
+    }
+  } else{
+    return res.status(403).send({
+      error: "Unauthorized To Access the specified resource",
+    });
   }
-  // else {
-  //   res.status(201).send("update");
-  // }
 });
 
+// Only Authenticated user with admin can delete.
 router.delete("/:id", async (req, res, next) => {
   const courseId = req.params.id;
   const result = await Course.destroy({ where: { id: courseId } });
