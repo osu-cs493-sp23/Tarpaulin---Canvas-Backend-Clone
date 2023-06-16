@@ -3,6 +3,7 @@ const sequelize = require("../lib/sequelize");
 const { Assignment } = require("./assignment");
 const { User } = require("./user");
 
+
 const Course = sequelize.define("course", {
   subject: { type: DataTypes.STRING, allowNull: false },
   number: { type: DataTypes.STRING, allowNull: false },
