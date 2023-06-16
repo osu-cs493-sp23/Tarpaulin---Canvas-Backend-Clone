@@ -5,6 +5,8 @@ const { User } = require("../models/user");
 const { requireAuthentication } = require("../lib/auth");
 const { Assignment } = require("../models/assignment");
 const router = Router();
+const { Parser } = require("json2csv");
+const fs = require("fs");
 
 router.get("/test", (req, res, next) => {
   res.status(200).send({ test: "test succesful, courses" });
@@ -199,11 +201,21 @@ router.get("/:id/roster", async (req, res, next) => {
     attributes: ["name", "email", "password", "role"],
   });
 
-  const csv = JSONToCSV(students, {
-    fields: ["name", "email", "password", "role"],
-  });
+  const fields = ["name", "email", "password", "role"];
+  const json2csvParser = new Parser({ fields });
+  const csv = json2csvParser.parse(students);
 
-  return res.attachment("studentsRoster.csv").send(csv);
+  const filePath = `${__dirname}/studentsRoster.csv`;
+  fs.writeFileSync(filePath, csv);
+
+  res.download(filePath, "studentsRoster.csv", (err) => {
+    if (err) {
+      console.error("Error downloading CSV:", err);
+      res.status(500).send("Error downloading CSV");
+    }
+
+    fs.unlinkSync(filePath); // Remove the file after download
+  });
 });
 
 //get assignments for a course
