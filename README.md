@@ -40,8 +40,4 @@ Since this entire application is Containerized you can simply run it this way:
  docker compose up
   ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
 
