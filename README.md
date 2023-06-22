@@ -38,6 +38,6 @@ Since this entire application is Containerized you can simply run it this way:
 * docker
   ```sh
  docker compose up
-  ```
+
 
 
