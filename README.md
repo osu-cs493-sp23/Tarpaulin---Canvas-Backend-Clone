@@ -1,4 +1,55 @@
-[![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-7f7980b617ed060a017424585567c406b6ee15c891e84e1186181d67ecf80aa0.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=11177615)
+# Introduction
 
 
-### TEST!
+
+
+
+
+<!-- ABOUT THE PROJECT -->
+## About The Project
+
+Tarpaulin, is a lightweight course management tool that’s an “alternative” to Canvas.  In particular, Tarpaulin allows users (instructors and students) to see information about the courses they’re teaching/taking.  It allows instructors to create assignments for their courses, and it allows students to submit solutions to those assignments.
+
+ 
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+
+<!-- GETTING STARTED -->
+## Getting Started
+
+
+To get a local copy up and running follow these simple example steps.
+
+Git clone: 
+
+  ```sh
+  git clone https://github.com/osu-cs493-sp23/Tarpaulin---Canvas-Backend-Clone.git
+  ```
+
+
+### Prerequisites
+
+Download docker daemon : docker.com/products/docker-desktop/
+
+Since this entire application is Containerized you can simply run it this way:
+* npm
+  ```sh
+ docker compose up
+  ```
+
+
+
+
+
+
+
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+
