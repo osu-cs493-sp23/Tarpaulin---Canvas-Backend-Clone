@@ -26,7 +26,7 @@ To get a local copy up and running follow these simple example steps.
 Git clone: 
 
   ```sh
-  git clone https://github.com/osu-cs493-sp23/Tarpaulin---Canvas-Backend-Clone.git
+git clone https://github.com/osu-cs493-sp23/Tarpaulin---Canvas-Backend-Clone.git
   ```
 
 
@@ -35,18 +35,11 @@ Git clone:
 Download docker daemon : docker.com/products/docker-desktop/
 
 Since this entire application is Containerized you can simply run it this way:
-* npm
+* docker
+  
   ```sh
  docker compose up
   ```
-
-
-
-
-
-
-
-
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
